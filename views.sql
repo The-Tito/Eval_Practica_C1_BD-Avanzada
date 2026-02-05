@@ -1,4 +1,44 @@
 -- ============================================
+-- VIEW_4 - beneficiarios con múltiples programas activos
+-- ============================================
+-- Qué devuelve: Beneficiarios que están activos simultáneamente en más
+--               de un programa social, junto con el monto total recibido.
+-- Grain (qué representa una fila): Un beneficiario.
+-- Métricas: COUNT(DISTINCT programas), SUM(monto_entregado).
+-- Por qué usa GROUP BY/HAVING: GROUP BY para agrupar por beneficiario
+--                              y HAVING para filtrar solo aquellos con
+--                              más de un programa activo.
+-- Campos calculados: Total de programas activos y monto total recibido.
+-- Consideraciones: Usa COALESCE para manejar beneficiarios sin entregas.
+-- ============================================
+CREATE VIEW vw_beneficiarios_multiplos_programas AS
+SELECT
+    b.id AS beneficiario_id,
+    b.curp,
+    b.nombre,
+    b.apellido_paterno,
+
+    COUNT(DISTINCT pb.programa_id) AS total_programas_activos,
+    COALESCE(SUM(e.monto_entregado), 0) AS monto_total_recibido
+
+FROM beneficiarios b
+JOIN padron_beneficiarios pb
+    ON pb.beneficiario_id = b.id
+    AND pb.estatus_padrón = 'Activo'
+LEFT JOIN entregas e
+    ON e.beneficiario_id = b.id
+    AND e.programa_id = pb.programa_id
+
+GROUP BY
+    b.id,
+    b.curp,
+    b.nombre,
+    b.apellido_paterno
+
+HAVING COUNT(DISTINCT pb.programa_id) > 1;
+
+
+-- ============================================
 -- VIEW_5 - bitácora de rechazos recientes
 -- ============================================
 -- Qué devuelve: Listado de solicitudes rechazadas en los últimos 90 días
@@ -14,7 +54,7 @@
 
 CREATE VIEW vw_rechazos_recientes AS
 SELECT
-    s.id_solicitud,
+    s.id AS solicitud_id,
     b.curp,
     b.nombre,
     be.fecha_cambio AS fecha_rechazo,
@@ -22,9 +62,9 @@ SELECT
 
 FROM bitacora_estados be
 JOIN solicitudes s
-    ON s.id_solicitud = be.id_solicitud
+    ON s.id = be.solicitud_id
 JOIN beneficiarios b
-    ON b.id_beneficiario = s.id_beneficiario
+    ON b.id = s.beneficiario_id
 
 WHERE
     be.estado_nuevo = 'Rechazada'
