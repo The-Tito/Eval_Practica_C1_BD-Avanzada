@@ -28,8 +28,7 @@ GROUP BY m.nombre, p.nombre, m.poblacion_total;
 -- Qué devuelve: Resumen de tasa de aprobacion y rechazo por convocatoria
 -- Grain (qué representa una fila): Una Convocatoria
 -- Métricas: SUM y COUNT
--- Por qué usa GROUP BY/HAVING: GROUP BY para poder agrupar por municipio
--- Campos calculado: Monto total entregado
+-- Por qué usa GROUP BY/HAVING: Agrupamos por convocatoria y nombre de programa
 -- ============================================
 
 --Eficiencia: Tasa de aprobación y rechazo por convocatoria.
